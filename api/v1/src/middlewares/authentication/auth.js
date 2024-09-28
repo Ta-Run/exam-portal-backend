@@ -49,6 +49,8 @@ async function authentication(req, res, next) {
       clientEmail: decodedJwtToken.email,
     });
 
+    
+
     if (!user) {
       return res.json({
         message: "unauthorized",

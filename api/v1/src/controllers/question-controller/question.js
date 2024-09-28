@@ -377,6 +377,7 @@ const questionCreate = async (req, res) => {
 
 const questionList = async (req, res) => {
   try {
+      
     if (req.user.loginType == "Client") {
       const { page = 1, limit = 10 } = req.query;
       const options = {
@@ -384,8 +385,9 @@ const questionList = async (req, res) => {
         limit: parseInt(limit, 10),
       };
       let query = { questionBankId: req.params.id };
-
+        
       const questionData = await QuestionModel.paginate(query, options);
+    
 
       return res.json({
         res: true,

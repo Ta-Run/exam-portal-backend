@@ -27,6 +27,8 @@ const SpocPersonAuthController = require("../controllers/spoc-person-service");
 const childUserService = require("../controllers/child-user-service");
 const stateDistrictController = require("../controllers/state-district");
 const examController = require("../controllers/exam/index");
+const getAllQuestions = require("../controllers/exam/index")
+const getUploadDocumentById = require("../controllers/exam/index")
 
 //State District Router
 router.get("/state", auth, stateDistrictController.state);
@@ -351,4 +353,9 @@ router.post(
   examController.uploadDocuments
 );
 
+router.get("/exam/questions-list", auth, examController.getAllQuestions);
+router.post("/exam/submit-exam", auth, examController.submitExam);
+
+//for get upload Documents 
+router.get("/exam/get-document/:clientId", auth, examController.getUploadDocumentById);
 module.exports = router;
