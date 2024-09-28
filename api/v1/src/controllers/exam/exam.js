@@ -129,40 +129,33 @@ const submitExam = async (req, res) => {
 
 const getUploadDocumentById = async (req, res) => {
   try {
-      // Extract clientId from request parameters
-      const { clientId } = req.params;
 
-      // Log the request data for debugging
-      console.log('Request received:', req);
+    const { clientId } = req.params;
 
-      // Check if clientId is provided
-      if (!clientId) {
-          return res.status(400).json({ message: 'clientId is required' });
-      }
+    if (!clientId) {
+      return res.status(400).json({ message: 'clientId is required' });
+    }
 
-      // Fetch the latest document based on clientId by sorting in descending order of creation date
-      const latestDocument = await ApplicationData.findOne({ clientId })
-          .sort({ createAt: -1 }); // Sorting by `createAt` in descending order to get the latest document
+    const latestDocument = await ApplicationData.findOne({ clientId })
+      .sort({ createAt: -1 });
 
-      // Check if a document is found
-      if (!latestDocument) {
-          return res.status(404).json({ message: 'No document found for the provided clientId' });
-      }
+    if (!latestDocument) {
+      return res.status(404).json({ message: 'No document found for the provided clientId' });
+    }
 
-      // Return the fetched document
-      return res.status(200).json({
-          message: 'Latest document fetched successfully',
-          data: latestDocument,
-      });
+    return res.status(200).json({
+      message: 'Latest document fetched successfully',
+      data: latestDocument,
+    });
   } catch (error) {
-      console.error('Error fetching the latest document by clientId:', error);
-      return res.status(500).json({
-          message: 'An error occurred while fetching the latest document',
-          error: error.message,
-      });
+    console.error('Error fetching the latest document by clientId:', error);
+    return res.status(500).json({
+      message: 'An error occurred while fetching the latest document',
+      error: error.message,
+    });
   }
 };
 
-module.exports = { getUploadDocumentById };
 
-module.exports = { uploadDocuments, getAllQuestions, submitExam,getUploadDocumentById };
+
+module.exports = { uploadDocuments, getAllQuestions, submitExam, getUploadDocumentById };
