@@ -29,6 +29,7 @@ const stateDistrictController = require("../controllers/state-district");
 const examController = require("../controllers/exam/index");
 const getAllQuestions = require("../controllers/exam/index")
 const getUploadDocumentById = require("../controllers/exam/index")
+const getClientQuestionDetails = require("../controllers/exam")
 
 //State District Router
 router.get("/state", auth, stateDistrictController.state);
@@ -358,4 +359,7 @@ router.post("/exam/submit-exam", auth, examController.submitExam);
 
 //for get upload Documents 
 router.get("/exam/get-document/:clientId", auth, examController.getUploadDocumentById);
+
+router.get("/exam/clietnDetail", auth, examController.getClientQuestionDetails)
+
 module.exports = router;

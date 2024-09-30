@@ -4,8 +4,8 @@ const ClientModel = require('../../models/client.model');
 const QuestionBankModel = require('../../models/question-bank.model')
 const NosModel = require('../../models/nos.model');
 const ApplicationData = require('../../models/app.model');
-const moment = require('moment-timezone');
-
+const ClientQuestionModel = require('../../models/question-bank.model')
+const moment = require('moment')
 const uploadDocuments = async (req, res) => {
   try {
     // console.log("===============> body", req.body);
@@ -157,5 +157,23 @@ const getUploadDocumentById = async (req, res) => {
 };
 
 
+//get client question bank and exam deatils by job rol id 
 
-module.exports = { uploadDocuments, getAllQuestions, submitExam, getUploadDocumentById };
+
+const getClientQuestionDetails = async (req,res) => {
+
+  try {
+
+    const data = await ClientQuestionModel.find({clientId:req.user.id})
+    return res.status(200).json({
+      data: data
+    })
+  } catch (err) {
+    console.log(err)
+    return res.status(500).json({
+      err: err
+    })
+  }
+}
+
+module.exports = { uploadDocuments, getAllQuestions, submitExam, getUploadDocumentById ,getClientQuestionDetails};
