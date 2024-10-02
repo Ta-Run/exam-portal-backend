@@ -77,12 +77,11 @@ const getAllQuestions = async (req, res) => {
 
 
 // Endpoint to submit exam answers
+// Endpoint to submit exam answers
 const submitExam = async (req, res) => {
   try {
-    let submitResult;
-    const { questionBankId, selectedOption, nosId, question } = req.body;
-
-    if (req.user.loginType == "Client") {
+    const  answers  = req.body 
+    if (req.user.loginType === "Client") {
       const isClient = await ClientModel.findOne({ clientEmail: req.user.email });
       if (!isClient) {
         return res.json({
@@ -91,39 +90,48 @@ const submitExam = async (req, res) => {
         });
       }
 
-      // Retrieve the question bank and NOS details if IDs are provided
-      const isQuestionBank = questionBankId ? await QuestionBankModel.findOne({ _id: questionBankId }) : null;
-      const isNos = nosId ? await NosModel.findOne({ _id: nosId }) : null;
+      // Create bulkWrite operations array
+      const bulkOperations = answers.map((answer) => {
+        const { questionBankId, selectedOption, nosId, question } = answer;
 
-      // Store the user's response without checking correctness
-      submitResult = await ExamResponse.create({
-        questionBankId: isQuestionBank ? isQuestionBank._id : null,
-        questionBankName: isQuestionBank ? isQuestionBank.questionBankName : "",
-        selectedOption: selectedOption,
-        question: question || " ",
-        clientId: isClient._id,
-        clientName: isClient.clientName,
-        nosId: isNos ? isNos._id : null,
-        nosName: isNos ? isNos.nosName : "",
-        createAt: moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss'),
-        createdById: isClient._id,
-        createdByName: isClient.clientName,
-        lastUpdatedAt: moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss'),
-        lastUpdatedByName: isClient.clientName,
-        lastUpdatedById: isClient._id,
-        status: "Active",
+        return {
+          insertOne: {
+            document: {
+              questionBankId: questionBankId || null,
+              questionBankName: answer.questionBankName || "",
+              selectedOption,
+              question: question || " ",
+              clientId: isClient._id,
+              clientName: isClient.clientName,
+              nosId: nosId || null,
+              nosName: answer.nosName || "",
+              createAt: moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss'),
+              createdById: isClient._id,
+              createdByName: isClient.clientName,
+              lastUpdatedAt: moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss'),
+              lastUpdatedByName: isClient.clientName,
+              lastUpdatedById: isClient._id,
+              status: "Active",
+            },
+          },
+        };
+      });
+
+      // Execute the bulkWrite operation
+      const bulkWriteResult = await ExamResponse.bulkWrite(bulkOperations);
+
+      return res.json({
+        message: 'Exam answers submitted successfully',
+        totalQuestions: bulkWriteResult.insertedCount,
+        data: bulkWriteResult,
       });
     }
-
-    return res.json({
-      message: 'Exam answers submitted successfully',
-      totalQuestions: submitResult,
-    });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 
 

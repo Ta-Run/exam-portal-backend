@@ -208,6 +208,8 @@ router.post(
 
 router.get("/assessor/get", auth, assessorController.assGetAll);
 
+router.get("/assessor/asscrDropDown",auth, assessorController.asscrDropDown)
+
 router.put(
   "/assessor/:id",
   auth,
@@ -359,7 +361,10 @@ router.post("/exam/submit-exam", auth, examController.submitExam);
 
 //for get upload Documents 
 router.get("/exam/get-document/:clientId", auth, examController.getUploadDocumentById);
-
 router.get("/exam/clietnDetail", auth, examController.getClientQuestionDetails)
+
+//Question Bank Analytics.
+router.get("/analytics/questionAnalytics/:id", auth, questionBankController.getQuestionAnalyticsRecord)
+
 
 module.exports = router;

@@ -377,7 +377,7 @@ const questionCreate = async (req, res) => {
 
 const questionList = async (req, res) => {
   try {
-      
+
     if (req.user.loginType == "Client") {
       const { page = 1, limit = 10 } = req.query;
       const options = {
@@ -385,9 +385,9 @@ const questionList = async (req, res) => {
         limit: parseInt(limit, 10),
       };
       let query = { questionBankId: req.params.id };
-        
+
       const questionData = await QuestionModel.paginate(query, options);
-    
+
 
       return res.json({
         res: true,
@@ -841,7 +841,7 @@ const questionEdit = async (req, res) => {
       }
       lastUpdatedByName = user.clientName;
       lastUpdatedById = user._id;
-    } 
+    }
     else if (userType === "spoc-person") {
       user = await SpocPersonModel.findOne({ emailId: req.user.email });
       if (!user) {
@@ -872,7 +872,7 @@ const questionEdit = async (req, res) => {
       }
       lastUpdatedByName = user.emailId;
       lastUpdatedById = user._id
-      
+
     }
     const updateFields = {
       questionBankId: req.body.questionBankId || isQuestion.questionBankId,
@@ -917,7 +917,7 @@ const questionEdit = async (req, res) => {
       res: true,
       msg: "Successfully updated the question."
     });
-    
+
   } catch (error) {
     console.error("Error in question update", error);
     return res.json({
@@ -1205,6 +1205,8 @@ const getQuestionBulkUpload = async (req, res) => {
   }
 }
 
+
+
 module.exports = {
   questionCreate,
   questionList,
@@ -1212,5 +1214,5 @@ module.exports = {
   questionEdit,
   questionStatusChange,
   questionBulkUpload,
-  getQuestionBulkUpload
+  getQuestionBulkUpload,
 }

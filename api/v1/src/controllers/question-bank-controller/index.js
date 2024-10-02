@@ -1,9 +1,10 @@
-const {questionBankAdd,questionBankList,questionBankRemove, questionBankStatus, questionBankEdit} =require('./question-bank')
+const {questionBankAdd,questionBankList,questionBankRemove, questionBankStatus, questionBankEdit,getQuestionAnalyticsRecord} =require('./question-bank')
 
 module.exports={
   questionBankAdd,
   questionBankList,
   questionBankRemove,
   questionBankEdit,
-  questionBankStatus
+  questionBankStatus,
+  getQuestionAnalyticsRecord
 }

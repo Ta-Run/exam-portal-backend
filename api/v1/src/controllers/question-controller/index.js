@@ -7,5 +7,6 @@ module.exports={
   questionStatusChange,
   questionEdit,
   questionBulkUpload,
-  getQuestionBulkUpload
+  getQuestionBulkUpload,
+  
 }

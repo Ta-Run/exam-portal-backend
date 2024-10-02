@@ -545,7 +545,7 @@ const sectorDropDown = async (req, res) => {
   try {
     if (req.user.loginType == "Client") {
       const isClient = await ClientModel.findOne({ clientEmail: req.user.email })
-      
+        
       if (!isClient) {
 
         
@@ -558,9 +558,9 @@ const sectorDropDown = async (req, res) => {
       const sectorData = []
       await Promise.all(isClient.assginedSectorsId.map(async (id) => {
         
-
+       
         const sector = await sectorModel.findOne({ _id: id, status: "Active" }, "_id name");
-      
+       
         if (sector) {
           sectorData.push(sector);
         }

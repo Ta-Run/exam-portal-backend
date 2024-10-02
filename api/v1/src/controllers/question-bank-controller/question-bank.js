@@ -928,10 +928,61 @@ const questionBankStatus = async (req, res) => {
     });
   }
 }
+
+
+const getQuestionAnalyticsRecord = async (req, res) => {
+  try {
+     console.log(req.params.id)
+     const sectorId = req.params.id;
+    //  const objectId = mongoose.Types.ObjectId(sectorId);
+    
+    const questionData = await QuestionBankModel.aggregate([
+      {
+        $lookup: {
+          from: "questions",
+          localField: "_id",
+          foreignField: "questionBankId",
+          as: "questionsData",
+        },
+      },
+      // Unwind the questionsData array to have individual question objects
+      { $unwind: "$questionsData" },
+      
+      // Project specific fields from both QuestionBank and questionsData
+      {
+        $project: {
+          _id: 1,    
+          assginedSectorsName:1,                  // Include the _id of the QuestionBank
+          questionBankName: 1,         // Include the question bank name or any other field you want
+          "questionsData._id": 1,      
+          "questionsData.question": 1, // Include the question text (replace with your actual field name)
+          "questionsData.difficulty": 1,
+          "questionsData.createAt": 1,
+          "questionsData.optionA": 1,
+          "questionsData.optionB": 1,
+          "questionsData.optionC": 1,
+          "questionsData.optionD": 1,
+            
+         }
+      }
+    ]);
+    
+
+    res.status(200).json({
+      success: true,
+      result: questionData
+    })
+  } catch (err) {
+    console.log('err',err)
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+
+}
 module.exports = {
   questionBankAdd,
   questionBankList,
   questionBankRemove,
   questionBankEdit,
-  questionBankStatus
+  questionBankStatus,
+  getQuestionAnalyticsRecord
 }

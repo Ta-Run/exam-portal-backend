@@ -960,10 +960,98 @@ const assDelete = async (req, res) => {
     }
 }
 
+
+
+const asscrDropDown = async (req, res) => {
+    try {
+      if (req.user.loginType == "Client") {
+        const isClient = await ClientModel.findOne({ clientEmail: req.user.email })
+          
+        if (!isClient) {
+  
+          
+          return res.json({
+            res: false,
+            msg: 'Somthing Went To Wrong!',
+          });
+        }
+  
+        const asscrData = []
+        await Promise.all(isClient.assginedSectorsId.map(async (id) => {
+         
+          const asscr = await assModel.findOne({ _id: id, status: "Active" }, "_id name");
+          console.log('sector',asscr)
+          if (asscr) {
+            asscrData.push(asscr);
+          }
+        }))
+        
+        return res.json({
+          req: true,
+          msg: "success",
+          data: asscrData
+        })
+      }
+  
+      if (req.user.loginType == "Admin") {
+        const sectorData = await assModel.find({ status: "Active" }, "_id name");
+        return res.json({
+          req: true,
+          msg: "success",
+          data: sectorData
+        })
+      }
+  
+      if(req.user.loginType == "spoc-person"){
+        const isSpocPerson = await SpocPersonModel.findOne({ emailId: req.user.email })
+        if (!isSpocPerson) {
+          return res.json({
+            res: false,
+            msg: 'Somthing Went To Wrong!',
+          });
+        }
+        const sectorData = await sectorModel.find({_id: { $in: isSpocPerson.assginedSectorsIds },status: "Active" }, "_id name");
+        return res.json({
+          req: true,
+          msg: "success",
+          data: sectorData
+        })
+      }
+  
+      if(req.user.loginType == "Child-User"){
+        const isChildUser = await ChildUserModel.findOne({emailId:req.user.email})
+        if(!isChildUser){
+          return res.json({
+            res: false,
+            msg: 'Somthing Went To Wrong!',
+          });
+        }
+        const sectorData = await sectorModel.find({_id:  isChildUser.selectSectorPermissionId ,status: "Active" }, "_id name");
+        return res.json({
+          req: true,
+          msg: "success",
+          data: sectorData
+        })
+      }
+  
+      return res.json({
+        res: false,
+        msg: 'Somthing went to wrong.',
+      });
+  
+    } catch (error) {
+      return res.json({
+        res: false,
+        msg: 'Somthing went to wrong.',
+      });
+    }
+  }
+
 module.exports = {
     asscreate,
     assGetAll,
     assEdit,
     statusUpdate,
-    assDelete
+    assDelete,
+    asscrDropDown
 }
