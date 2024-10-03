@@ -1,10 +1,11 @@
-const {questionBankAdd,questionBankList,questionBankRemove, questionBankStatus, questionBankEdit,getQuestionAnalyticsRecord} =require('./question-bank')
+const { questionBankAdd, questionBankList, questionBankRemove, questionBankStatus, questionBankEdit, getQuestionAnalyticsRecord, getAnalyticsBySector } = require('./question-bank')
 
-module.exports={
+module.exports = {
   questionBankAdd,
   questionBankList,
   questionBankRemove,
   questionBankEdit,
   questionBankStatus,
-  getQuestionAnalyticsRecord
+  getQuestionAnalyticsRecord, 
+  getAnalyticsBySector
 }

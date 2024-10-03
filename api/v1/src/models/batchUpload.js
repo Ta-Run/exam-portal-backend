@@ -64,8 +64,6 @@ const schema = new mongoose.Schema({
         // enum: ["TRUE","FALSE"]
     },
   
-
-
     clientId: { type: Schema.Types.ObjectId, ref: 'clients' },
     clientName: {
         type: String,

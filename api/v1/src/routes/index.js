@@ -27,9 +27,9 @@ const SpocPersonAuthController = require("../controllers/spoc-person-service");
 const childUserService = require("../controllers/child-user-service");
 const stateDistrictController = require("../controllers/state-district");
 const examController = require("../controllers/exam/index");
-const getAllQuestions = require("../controllers/exam/index")
-const getUploadDocumentById = require("../controllers/exam/index")
-const getClientQuestionDetails = require("../controllers/exam")
+// const getAllQuestions = require("../controllers/exam/index")
+// const getUploadDocumentById = require("../controllers/exam/index")
+// const getClientQuestionDetails = require("../controllers/exam")
 
 //State District Router
 router.get("/state", auth, stateDistrictController.state);
@@ -365,6 +365,9 @@ router.get("/exam/clietnDetail", auth, examController.getClientQuestionDetails)
 
 //Question Bank Analytics.
 router.get("/analytics/questionAnalytics/:id", auth, questionBankController.getQuestionAnalyticsRecord)
+
+//Get Sectors Analytics 
+router.get("/analytics/sectorAnalytics/:id", auth, questionBankController.getAnalyticsBySector)
 
 
 module.exports = router;

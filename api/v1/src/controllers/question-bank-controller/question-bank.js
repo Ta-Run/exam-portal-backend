@@ -5,10 +5,13 @@ const QuestionBankModel = require("../../models/question-bank.model")
 const JobRoleModel = require('../../models/job-role.model')
 const SpocPersonModel = require('../../models/spoc-person.model')
 const ChildUserModel = require("../../models/child.user.model")
-
-
+const manageCandidateModel = require("../../models/manageCandidate")
+const manageAssessorModel = require("../../models/manage.assessor")
+const manageBatchModel = require("../../models/manage-Batch")
+const mongoose = require('mongoose')
 
 const moment = require('moment-timezone');
+
 
 const questionBankAdd = async (req, res) => {
   try {
@@ -674,7 +677,7 @@ const questionBankEdit = async (req, res) => {
           msg: 'Somthing Went To Wrong!',
         });
       }
-      
+
       if (questionBankName) {
         let codeQuery = { questionBankName: questionBankName, clientId: isClient._id };
         if (questionBankName) {
@@ -882,7 +885,7 @@ const questionBankStatus = async (req, res) => {
           msg: 'Somthing Went To Wrong!',
         });
       }
-      
+
       if (isQuestionBank.status == "Active") {
         await QuestionBankModel.updateOne({ _id: isQuestionBank._id }, {
           $set: {
@@ -932,10 +935,28 @@ const questionBankStatus = async (req, res) => {
 
 const getQuestionAnalyticsRecord = async (req, res) => {
   try {
-     console.log(req.params.id)
-     const sectorId = req.params.id;
-    //  const objectId = mongoose.Types.ObjectId(sectorId);
-    
+    const sectorId = req.params.id;
+    const { startDate, endDate } = req.query;
+
+    console.log('data', sectorId, startDate, endDate);
+
+    const matchConditions = {};
+
+    if (sectorId) {
+
+      matchConditions.assginedSectorsId = new mongoose.Types.ObjectId(sectorId);
+    }
+
+    if (startDate || endDate) {
+      matchConditions['questionsData.createdAt'] = {};
+      if (startDate) {
+        matchConditions['questionsData.createdAt'].$gte = new Date(startDate);
+      }
+      if (endDate) {
+        matchConditions['questionsData.createdAt'].$lte = new Date(endDate);
+      }
+    }
+
     const questionData = await QuestionBankModel.aggregate([
       {
         $lookup: {
@@ -945,44 +966,99 @@ const getQuestionAnalyticsRecord = async (req, res) => {
           as: "questionsData",
         },
       },
-      // Unwind the questionsData array to have individual question objects
       { $unwind: "$questionsData" },
-      
-      // Project specific fields from both QuestionBank and questionsData
+      { $match: matchConditions },
       {
         $project: {
-          _id: 1,    
-          assginedSectorsName:1,                  // Include the _id of the QuestionBank
-          questionBankName: 1,         // Include the question bank name or any other field you want
-          "questionsData._id": 1,      
-          "questionsData.question": 1, // Include the question text (replace with your actual field name)
+          _id: 1,
+          assginedSectorsName: 1,
+          questionBankName: 1,
+          createdAt: 1,
+          "questionsData._id": 1,
+          "questionsData.question": 1,
           "questionsData.difficulty": 1,
-          "questionsData.createAt": 1,
+          "questionsData.createdAt": 1,
           "questionsData.optionA": 1,
           "questionsData.optionB": 1,
           "questionsData.optionC": 1,
           "questionsData.optionD": 1,
-            
-         }
-      }
+        },
+      },
     ]);
-    
 
     res.status(200).json({
       success: true,
-      result: questionData
-    })
+      result: questionData,
+    });
   } catch (err) {
-    console.log('err',err)
-    return res.status(500).json({ error: 'Internal server error' });
+    console.log('Error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
+};
 
-}
+
+
+const getAnalyticsBySector = async (req, res) => {
+  try {
+    const sectorId = req.params.id;
+
+
+    const totalBatches = await manageBatchModel.find({ assginedSectorsId: sectorId });
+
+
+    const totalCandidates = await manageCandidateModel.find({ assginedSectorsId: sectorId });
+
+
+    const totalStates = await manageAssessorModel.distinct("state", { assginedSectorsId: sectorId });
+
+    // Total Districts (distinct districts for the sector)
+    const totalDistricts = await manageAssessorModel.distinct("district", { assginedSectorsId: sectorId });
+
+    // Bar graph data (State Status based on batch count)
+    const stateBatchStatus = await manageBatchModel.aggregate([
+      { $match: { assginedSectorsId: sectorId } },
+      {
+        $group: {
+          _id: "$stateId",
+          totalBatches: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // Pie chart data (Job Role Status based on candidates per job role)
+    const jobRoleStatus = await manageCandidateModel.aggregate([
+      { $match: { assginedSectorsId: sectorId } },
+      {
+        $group: {
+          _id: "$jobRoleId",
+          totalCandidates: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // Final Response
+    res.status(200).json({
+      totalBatches,
+      totalCandidates,
+      totalStates: totalStates,
+      totalDistricts: totalDistricts,
+      stateBatchStatus,
+      jobRoleStatus,
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: 'Server Error', error });
+  }
+};
+
+
+
 module.exports = {
   questionBankAdd,
   questionBankList,
   questionBankRemove,
   questionBankEdit,
   questionBankStatus,
-  getQuestionAnalyticsRecord
+  getQuestionAnalyticsRecord,
+  getAnalyticsBySector
 }
