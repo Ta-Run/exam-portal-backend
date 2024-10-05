@@ -367,7 +367,7 @@ router.get("/exam/clietnDetail", auth, examController.getClientQuestionDetails)
 router.get("/analytics/questionAnalytics/:id", auth, questionBankController.getQuestionAnalyticsRecord)
 
 //Get Sectors Analytics 
-router.get("/analytics/sectorAnalytics/:id", auth, questionBankController.getAnalyticsBySector)
+router.get("/analytics/analyticReports/:id", auth, questionBankController.getAnalyticsBySector)
 
 
 module.exports = router;

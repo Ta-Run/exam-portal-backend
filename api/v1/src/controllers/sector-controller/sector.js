@@ -544,11 +544,10 @@ const sectorDelete = async (req, res) => {
 const sectorDropDown = async (req, res) => {
   try {
     if (req.user.loginType == "Client") {
+      
       const isClient = await ClientModel.findOne({ clientEmail: req.user.email })
         
       if (!isClient) {
-
-        
         return res.json({
           res: false,
           msg: 'Somthing Went To Wrong!',

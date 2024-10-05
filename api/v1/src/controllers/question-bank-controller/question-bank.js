@@ -7,7 +7,8 @@ const SpocPersonModel = require('../../models/spoc-person.model')
 const ChildUserModel = require("../../models/child.user.model")
 const manageCandidateModel = require("../../models/manageCandidate")
 const manageAssessorModel = require("../../models/manage.assessor")
-const manageBatchModel = require("../../models/manage-Batch")
+const manageBatchModel = require("../../models/manage-Batch");
+const jobRoleModel = require("../../models/job-role.model")
 const mongoose = require('mongoose')
 
 const moment = require('moment-timezone');
@@ -1000,41 +1001,81 @@ const getQuestionAnalyticsRecord = async (req, res) => {
 
 const getAnalyticsBySector = async (req, res) => {
   try {
-    const sectorId = req.params.id;
+    const sectorId = req.params.id ;
+    const { from, to } = req.query;
+
+    const fromDate = new Date(from) || null;
+    const toDate = new Date(to) || null;
+
+    const totalBatches = await manageBatchModel.countDocuments({
+      assginedSectorsId: sectorId,
+      createAt: { $gte: fromDate, $lte: toDate }
+    });
 
 
-    const totalBatches = await manageBatchModel.find({ assginedSectorsId: sectorId });
+    const totalCandidates = await manageCandidateModel.countDocuments({
+      assginedSectorsId: sectorId,
+      createAt: { $gte: fromDate, $lte: toDate }
+    });
 
 
-    const totalCandidates = await manageCandidateModel.find({ assginedSectorsId: sectorId });
+    // const totalStates = await manageAssessorModel.distinct("state", { assginedSectorsId: sectorId });
 
+    const totalStates = await manageAssessorModel.countDocuments("state")
 
-    const totalStates = await manageAssessorModel.distinct("state", { assginedSectorsId: sectorId });
+    // // Total Districts (distinct districts for the sector)
+    // const totalDistricts = await manageAssessorModel.distinct("district", { assginedSectorsId: sectorId });
 
-    // Total Districts (distinct districts for the sector)
-    const totalDistricts = await manageAssessorModel.distinct("district", { assginedSectorsId: sectorId });
+    const totalDistricts = await manageAssessorModel.countDocuments("district");
 
-    // Bar graph data (State Status based on batch count)
+    
     const stateBatchStatus = await manageBatchModel.aggregate([
-      { $match: { assginedSectorsId: sectorId } },
+      {
+        $match: {
+          // assginedSectorsId: sectorId,
+          createdAt: { $gte: fromDate, $lte: toDate } // Filter by createdAt
+        }
+      },
+      
       {
         $group: {
-          _id: "$stateId",
-          totalBatches: { $sum: 1 },
-        },
+          _id: "$state",
+          stateCount: { $sum: 1 },
+          // createAt: { $gte: fromDate, $lte: toDate },
+        }
       },
-    ]);
+      {
+        $project: {
+          _id: 0,
+          state: "$_id",
+          stateCount: 1
+        }
+      }]);
 
-    // Pie chart data (Job Role Status based on candidates per job role)
-    const jobRoleStatus = await manageCandidateModel.aggregate([
-      { $match: { assginedSectorsId: sectorId } },
+    
+    const jobRoleStatus = await jobRoleModel.aggregate([
+      {
+        $match: {
+          // assginedSectorsId: sectorId,
+          createdAt: { $gte: fromDate, $lte: toDate } // Filter by createdAt
+        }
+      },
+      
       {
         $group: {
-          _id: "$jobRoleId",
-          totalCandidates: { $sum: 1 },
-        },
+          _id: "$jobRoleName",
+          jobRoleCount: { $sum: 1 },
+          // createAt: { $gte: fromDate, $lte: toDate }
+
+        }
       },
-    ]);
+      {
+        $project: {
+          _id: 0,
+          jobRole: "$_id",
+          jobRoleCount: 1
+        }
+      }]);
 
     // Final Response
     res.status(200).json({
