@@ -368,6 +368,11 @@ router.get("/analytics/questionAnalytics/:id", auth, questionBankController.getQ
 
 //Get Sectors Analytics 
 router.get("/analytics/analyticReports/:id", auth, questionBankController.getAnalyticsBySector)
+//question Bank
+router.get("/question-bank/drop-down", auth, questionBankController.getquesitonBankDropDown);
+
+//assessor drop down
+router.get("/assessor/drop-down/:id", auth, questionBankController.getAssessorsDropDown);
 
 
 module.exports = router;

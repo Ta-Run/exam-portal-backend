@@ -8,5 +8,4 @@ module.exports={
   questionEdit,
   questionBulkUpload,
   getQuestionBulkUpload,
-  
 }
