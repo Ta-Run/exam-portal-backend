@@ -26,10 +26,8 @@ const appController = require("../controllers/app");
 const SpocPersonAuthController = require("../controllers/spoc-person-service");
 const childUserService = require("../controllers/child-user-service");
 const stateDistrictController = require("../controllers/state-district");
-const examController = require("../controllers/exam/index");
-// const getAllQuestions = require("../controllers/exam/index")
-// const getUploadDocumentById = require("../controllers/exam/index")
-// const getClientQuestionDetails = require("../controllers/exam")
+const examController = require("../controllers/testmodule-controller");
+const analyticsController = require("../controllers/analytics-controller")
 
 //State District Router
 router.get("/state", auth, stateDistrictController.state);
@@ -364,15 +362,15 @@ router.get("/exam/get-document/:clientId", auth, examController.getUploadDocumen
 router.get("/exam/clietnDetail", auth, examController.getClientQuestionDetails)
 
 //Question Bank Analytics.
-router.get("/analytics/questionAnalytics/:id", auth, questionBankController.getQuestionAnalyticsRecord)
+router.get("/analytics/questionAnalytics/:id", auth, analyticsController.getQuestionAnalyticsRecord)
 
 //Get Sectors Analytics 
-router.get("/analytics/analyticReports/:id", auth, questionBankController.getAnalyticsBySector)
+router.get("/analytics/analyticReports/:id", auth, analyticsController.getAnalyticsBySector)
 //question Bank
-router.get("/question-bank/drop-down", auth, questionBankController.getquesitonBankDropDown);
+router.get("/question-bank/drop-down", auth, analyticsController.getquesitonBankDropDown);
 
 //assessor drop down
-router.get("/assessor/drop-down/:id", auth, questionBankController.getAssessorsDropDown);
+router.get("/assessor/drop-down/:id", auth, analyticsController.getAssessorsDropDown);
 
 
 module.exports = router;

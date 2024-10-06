@@ -1,6 +1,4 @@
-const { questionBankAdd, questionBankList, questionBankRemove, questionBankStatus, questionBankEdit, getQuestionAnalyticsRecord, getAnalyticsBySector,
-  getquesitonBankDropDown,
-  getAssessorsDropDown
+const { questionBankAdd, questionBankList, questionBankRemove, questionBankStatus, questionBankEdit
  } = require('./question-bank')
 
 module.exports = {
@@ -9,8 +7,4 @@ module.exports = {
   questionBankRemove,
   questionBankEdit,
   questionBankStatus,
-  getQuestionAnalyticsRecord, 
-  getAnalyticsBySector,
-  getquesitonBankDropDown,
-  getAssessorsDropDown
 }
