@@ -1,3 +1,11 @@
+
+const SectorModel = require("../../models/sector.model")
+const ClientModel = require("../../models/client.model")
+const AdminModel = require("../../models/admin.model");
+const QuestionBankModel = require("../../models/question-bank.model")
+const JobRoleModel = require('../../models/job-role.model')
+const SpocPersonModel = require('../../models/spoc-person.model')
+const ChildUserModel = require("../../models/child.user.model")
 const manageCandidateModel = require("../../models/manageCandidate")
 const manageAssessorModel = require("../../models/manage.assessor")
 const manageBatchModel = require("../../models/manage-Batch");
@@ -259,6 +267,52 @@ const getAssessorsDropDown = async (req, res) => {
                 data: questionBankData
             });
         }
+        
+        if (req.user.loginType == "Admin") {
+            const sectorData = await QuestionBankModel.find({ status: "Active" }, "_id name");
+            return res.json({
+                req: true,
+                msg: "success",
+                data: sectorData
+            })
+        }
+
+        if (req.user.loginType == "spoc-person") {
+            const isSpocPerson = await SpocPersonModel.findOne({ emailId: req.user.email })
+            if (!isSpocPerson) {
+                return res.json({
+                    res: false,
+                    msg: 'Somthing Went To Wrong!',
+                });
+            }
+            const sectorData = await QuestionBankModel.find({ _id: { $in: isSpocPerson.assginedSectorsIds }, status: "Active" }, "_id name");
+            return res.json({
+                req: true,
+                msg: "success",
+                data: sectorData
+            })
+        }
+
+        if (req.user.loginType == "Child-User") {
+            const isChildUser = await ChildUserModel.findOne({ emailId: req.user.email })
+            if (!isChildUser) {
+                return res.json({
+                    res: false,
+                    msg: 'Somthing Went To Wrong!',
+                });
+            }
+            const sectorData = await QuestionBankModel.find({ _id: isChildUser.selectSectorPermissionId, status: "Active" }, "_id name");
+            return res.json({
+                req: true,
+                msg: "success",
+                data: sectorData
+            })
+        }
+
+        return res.json({
+            res: false,
+            msg: 'Somthing went to wrong.',
+        });
     } catch (error) {
         console.error('Error:', error);
         return res.json({
