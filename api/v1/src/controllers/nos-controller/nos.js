@@ -10,6 +10,7 @@ const fs = require('fs')
 const xlsx = require('xlsx')
 const moment = require('moment-timezone');
 const mongoose = require('mongoose')
+const { ObjectId } = require('mongodb');
 
 const nosCreate = async (req, res) => {
   try {
@@ -1229,6 +1230,8 @@ const nosDropDownList = async (req, res) => {
           msg: 'Client with email not found!',
         });
       }
+          
+      
 
       const NosData = await NosModel.find({ clientId: isClient._id, status: "Active" }, "_id nosName")
       return res.json({
@@ -1236,6 +1239,8 @@ const nosDropDownList = async (req, res) => {
         msg: "Success",
         data: NosData
       })
+      
+      
     }
 
     if (req.user.loginType == "spoc-person") {

@@ -1,5 +1,5 @@
 const QuestionModel = require('../../models/question.model')
-const ExamResponse = require('../../models/examresponse.model');
+const ExamResponseModel = require('../../models/examresponse.model');
 const ClientModel = require('../../models/client.model');
 const QuestionBankModel = require('../../models/question-bank.model')
 const NosModel = require('../../models/nos.model');
@@ -80,7 +80,7 @@ const getAllQuestions = async (req, res) => {
 // Endpoint to submit exam answers
 const submitExam = async (req, res) => {
   try {
-    const  answers  = req.body 
+    const { questionBankId, answers } = req.body;
     if (req.user.loginType === "Client") {
       const isClient = await ClientModel.findOne({ clientEmail: req.user.email });
       if (!isClient) {
@@ -90,40 +90,37 @@ const submitExam = async (req, res) => {
         });
       }
 
-      // Create bulkWrite operations array
-      const bulkOperations = answers.map((answer) => {
-        const { questionBankId, selectedOption, nosId, question } = answer;
+      let totalScore = 0;
+      let submissions = [];
+      let clientId =  isClient._id
+      for (let answer of answers) {
+        const { questionId, userAnswer } = answer;
+        console.log('question',questionId)
+        const question = await QuestionModel.findById(questionId);
+        const isCorrect = (question.writeOption === userAnswer);
+        const marks = isCorrect ? parseInt(question.questionMarks) : 0;
+        totalScore += marks;
+    
+        // Create a submission record
+        const submission = new ExamResponseModel({
+          clientId,
+          questionBankId,
+          questionId,
+          userAnswer,
+          isCorrect,
+          marks,
+          totalScore
+        });
 
-        return {
-          insertOne: {
-            document: {
-              questionBankId: questionBankId || null,
-              questionBankName: answer.questionBankName || "",
-              selectedOption,
-              question: question || " ",
-              clientId: isClient._id,
-              clientName: isClient.clientName,
-              nosId: nosId || null,
-              nosName: answer.nosName || "",
-              createAt: moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss'),
-              createdById: isClient._id,
-              createdByName: isClient.clientName,
-              lastUpdatedAt: moment().tz('Asia/Kolkata').format('YYYY-MM-DD HH:mm:ss'),
-              lastUpdatedByName: isClient.clientName,
-              lastUpdatedById: isClient._id,
-              status: "Active",
-            },
-          },
-        };
-      });
+        submissions.push(submission);
+      }
 
-      // Execute the bulkWrite operation
-      const bulkWriteResult = await ExamResponse.bulkWrite(bulkOperations);
+      await ExamResponseModel.insertMany(submissions);
 
-      return res.json({
-        message: 'Exam answers submitted successfully',
-        totalQuestions: bulkWriteResult.insertedCount,
-        data: bulkWriteResult,
+      return res.status(200).json({
+        msg: 'Exam submitted successfully',
+        totalScore,
+        submissions
       });
     }
   } catch (error) {
@@ -168,11 +165,11 @@ const getUploadDocumentById = async (req, res) => {
 //get client question bank and exam deatils by job rol id 
 
 
-const getClientQuestionDetails = async (req,res) => {
+const getClientQuestionDetails = async (req, res) => {
 
   try {
 
-    const data = await ClientQuestionModel.find({clientId:req.user.id})
+    const data = await ClientQuestionModel.find({ clientId: req.user.id })
     return res.status(200).json({
       data: data
     })
@@ -184,4 +181,4 @@ const getClientQuestionDetails = async (req,res) => {
   }
 }
 
-module.exports = { uploadDocuments, getAllQuestions, submitExam, getUploadDocumentById ,getClientQuestionDetails};
+module.exports = { uploadDocuments, getAllQuestions, submitExam, getUploadDocumentById, getClientQuestionDetails };

@@ -1,20 +1,19 @@
 
 const ClientModel = require("../../models/client.model")
-
-const QuestionBankModel = require("../../models/question-bank.model")
-
-const SpocPersonModel = require('../../models/spoc-person.model')
-const ChildUserModel = require("../../models/child.user.model")
-const manageBatchModel = require("../../models/manage-Batch");
-const manageAssessorModel = require("../../models/manage.assessor")
-const sectoeModel = require("../../models/sector.model")
+const sectoeModel = require("../../models/sector.model");
+const moment = require('moment');
 
 
 const getMisReportsData = async (req, res) => {
     try {
         if (req.user.loginType == "Client") {
+            const { startTime, endTime } = req.query;
+            // const fromDate = startTime ? moment(startTime).startOf('day')//
+            // const toDate = endTime ? moment(endTime).endOf('day')//
 
-            const isClient = await ClientModel.findOne({ clientEmail: req.user.email })
+            // console.log('bol',fromDate,toDate)
+
+            const isClient = await ClientModel.findOne({ clientEmail: req.user.email });
 
             if (!isClient) {
                 return res.json({
@@ -23,10 +22,9 @@ const getMisReportsData = async (req, res) => {
                 });
             }
 
-            // console.log('isClient ', isClient)
+            console.log('isClient ', startTime, endTime); // Corrected log statement
 
             const reportsData = await sectoeModel.aggregate([
-                
                 {
                     $lookup: {
                         from: "manage-batches",
@@ -47,7 +45,6 @@ const getMisReportsData = async (req, res) => {
                         status: 1,
                         createdAt: 1,
                         updatedAt: 1,
-                        // Flatten fields from the manageBatch
                         state: "$manageBatch.state",
                         district: "$manageBatch.district",
                         TrainingPartnerName: "$manageBatch.TrainingPartnerName",
@@ -68,70 +65,30 @@ const getMisReportsData = async (req, res) => {
                         as: "questionBanks"
                     }
                 },
-
-
-            ])
+                // {
+                //     $match: {
+                //         // Ensure that you are using the correct variable names
+                //          { "manageBatch.StartDate": { $gte: fromDate }},
+                //          { "manageBatch.EndDate": { $lte: toDate } }
+                //     }
+                // }
+            ]);
 
             return res.json({
                 req: true,
                 msg: "success",
                 data: reportsData
-            })
+            });
         }
-
-        if (req.user.loginType == "Admin") {
-            const sectorData = await QuestionBankModel.find({ status: "Active" }, "_id name");
-            return res.json({
-                req: true,
-                msg: "success",
-                data: sectorData
-            })
-        }
-
-        if (req.user.loginType == "spoc-person") {
-            const isSpocPerson = await SpocPersonModel.findOne({ emailId: req.user.email })
-            if (!isSpocPerson) {
-                return res.json({
-                    res: false,
-                    msg: 'Somthing Went To Wrong!',
-                });
-            }
-            const sectorData = await QuestionBankModel.find({ _id: { $in: isSpocPerson.assginedSectorsIds }, status: "Active" }, "_id name");
-            return res.json({
-                req: true,
-                msg: "success",
-                data: sectorData
-            })
-        }
-
-        if (req.user.loginType == "Child-User") {
-            const isChildUser = await ChildUserModel.findOne({ emailId: req.user.email })
-            if (!isChildUser) {
-                return res.json({
-                    res: false,
-                    msg: 'Somthing Went To Wrong!',
-                });
-            }
-            const sectorData = await QuestionBankModel.find({ _id: isChildUser.selectSectorPermissionId, status: "Active" }, "_id name");
-            return res.json({
-                req: true,
-                msg: "success",
-                data: sectorData
-            })
-        }
-
-        return res.json({
-            res: false,
-            msg: 'Somthing went to wrong.',
-        });
-
     } catch (error) {
+        console.error("Error fetching MIS reports:", error);
         return res.json({
             res: false,
-            msg: 'Somthing went to wrong.',
+            msg: 'Something went wrong.',
         });
     }
 }
+
 
 
 module.exports = {
