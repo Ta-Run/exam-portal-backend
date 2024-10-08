@@ -76,58 +76,77 @@ const getAllQuestions = async (req, res) => {
 };
 
 
-// Endpoint to submit exam answers
-// Endpoint to submit exam answers
+
 const submitExam = async (req, res) => {
   try {
     const { questionBankId, answers } = req.body;
+
+    // Early validation for inputs
+    if (!questionBankId || !Array.isArray(answers) || answers.length === 0) {
+      return res.status(400).json({ res: false, msg: 'Invalid request body!' });
+    }
+
     if (req.user.loginType === "Client") {
       const isClient = await ClientModel.findOne({ clientEmail: req.user.email });
       if (!isClient) {
-        return res.json({
-          res: false,
-          msg: 'Something Went Wrong!',
-        });
+        return res.status(400).json({ res: false, msg: 'Client not found!' });
       }
 
       let totalScore = 0;
-      let submissions = [];
-      let clientId =  isClient._id
+      const clientId = isClient._id;
+      const userAnswers = [];
+
+      // Fetch all question IDs in one query to reduce database load
+      const questionIds = answers.map(answer => answer.questionId);
+      const questions = await QuestionModel.find({ _id: { $in: questionIds } });
+      const questionMap = new Map(questions.map(q => [q._id.toString(), q]));
+
+      // Process each answer
       for (let answer of answers) {
         const { questionId, userAnswer } = answer;
-        console.log('question',questionId)
-        const question = await QuestionModel.findById(questionId);
-        const isCorrect = (question.writeOption === userAnswer);
+
+        // Fetch question from map
+        const question = questionMap.get(questionId);
+        if (!question) {
+          console.log(`Question with ID ${questionId} not found`);
+          continue; // Skip if the question is not found
+        }
+
+        // Compare answer with correct answer
+        const isCorrect = (question.correctAnswer === userAnswer);
         const marks = isCorrect ? parseInt(question.questionMarks) : 0;
         totalScore += marks;
-    
-        // Create a submission record
-        const submission = new ExamResponseModel({
-          clientId,
-          questionBankId,
+
+        // Prepare each user answer entry
+        userAnswers.push({
           questionId,
           userAnswer,
           isCorrect,
-          marks,
-          totalScore
+          marks
         });
-
-        submissions.push(submission);
       }
 
-      await ExamResponseModel.insertMany(submissions);
+      // Submit the exam response
+      const resultAns = await ExamResponseModel.create({
+        clientId: clientId,
+        clientName: isClient.clientName,
+        questionBankId: questionBankId,
+        userAnswers,  // Populate the userAnswers array
+        totalScore: totalScore
+      });
 
       return res.status(200).json({
         msg: 'Exam submitted successfully',
-        totalScore,
-        submissions
+        resultAns
       });
     }
   } catch (error) {
-    console.error(error);
+    console.error('Error during exam submission:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+
 
 
 

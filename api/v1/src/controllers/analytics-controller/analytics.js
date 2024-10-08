@@ -99,9 +99,12 @@ const getAnalyticsBySector = async (req, res) => {
             createAt: { $gte: fromDate.toISOString(), $lte: toDate.toISOString() }
         });
 
-        const totalStates = await manageAssessorModel.countDocuments("state");
-        const totalDistricts = await manageAssessorModel.countDocuments("district");
+        const totalStates = await manageBatchModel.find({ assginedSectorsId: sectorObjectId }, "state");
+        const totalDistricts = await manageBatchModel.find({ assginedSectorsId: sectorObjectId }, "district");
 
+        const statesCount = totalStates.length;
+
+        const districtCount = totalDistricts.length;
         // Aggregation for batch status by state
         const stateBatchStatus = await manageBatchModel.aggregate([
             {
@@ -156,8 +159,8 @@ const getAnalyticsBySector = async (req, res) => {
         res.status(200).json({
             totalBatches,
             totalCandidates,
-            totalStates,
-            totalDistricts,
+            totalStates:statesCount,
+            totalDistricts:districtCount,
             stateBatchStatus,
             jobRoleStatus,
         });
@@ -267,7 +270,7 @@ const getAssessorsDropDown = async (req, res) => {
                 data: questionBankData
             });
         }
-        
+
         if (req.user.loginType == "Admin") {
             const sectorData = await QuestionBankModel.find({ status: "Active" }, "_id name");
             return res.json({
