@@ -7,11 +7,9 @@ const moment = require('moment');
 const getMisReportsData = async (req, res) => {
     try {
         if (req.user.loginType == "Client") {
-            const { startTime, endTime } = req.query;
-            // const fromDate = startTime ? moment(startTime).startOf('day')//
-            // const toDate = endTime ? moment(endTime).endOf('day')//
-
-            // console.log('bol',fromDate,toDate)
+            const { startDate, endDate } = req.query;
+            const fromDate = moment(startDate).format('YYYY-MM-DD'); 
+             const toDate = moment(endDate).format('YYYY-MM-DD');
 
             const isClient = await ClientModel.findOne({ clientEmail: req.user.email });
 
@@ -21,8 +19,6 @@ const getMisReportsData = async (req, res) => {
                     msg: 'Client Not Found',
                 });
             }
-
-            console.log('isClient ', startTime, endTime); // Corrected log statement
 
             const reportsData = await sectoeModel.aggregate([
                 {
@@ -36,6 +32,15 @@ const getMisReportsData = async (req, res) => {
                 {
                     $unwind: "$manageBatch"  // Flatten the manageBatch array
                 },
+
+                 {
+                $match: {
+                // //         // Ensure that you are using the correct variable names
+                           "manageBatch.StartDate": {$gte:fromDate},
+                           "manageBatch.EndDate": {$lte:toDate} 
+                     }
+                 },
+
                 {
                     $project: {
                         _id: 1,
@@ -65,15 +70,10 @@ const getMisReportsData = async (req, res) => {
                         as: "questionBanks"
                     }
                 },
-                // {
-                //     $match: {
-                //         // Ensure that you are using the correct variable names
-                //          { "manageBatch.StartDate": { $gte: fromDate }},
-                //          { "manageBatch.EndDate": { $lte: toDate } }
-                //     }
-                // }
+                 
             ]);
 
+            console.log(reportsData,'kkk')
             return res.json({
                 req: true,
                 msg: "success",
