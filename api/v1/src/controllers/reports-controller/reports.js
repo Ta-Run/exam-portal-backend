@@ -72,8 +72,6 @@ const getMisReportsData = async (req, res) => {
                 },
                  
             ]);
-
-            console.log(reportsData,'kkk')
             return res.json({
                 req: true,
                 msg: "success",

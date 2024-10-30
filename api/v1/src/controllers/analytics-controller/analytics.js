@@ -325,11 +325,111 @@ const getAssessorsDropDown = async (req, res) => {
     }
 };
 
+
+const getAnalyticsByAssessors = async (req, res) => {
+    try {
+        const assessorId = req.params.id;
+        const { from, to } = req.query;
+
+        // Use moment to handle the date conversion
+        const fromDate = moment(from).startOf('day'); // Set the start of the day
+        const toDate = moment(to).endOf('day'); // Set the end of the day
+
+        // Correct instantiation of ObjectId using 'new'
+        const assessorObjectId = new mongoose.Types.ObjectId(assessorId);
+
+        // Filter by StartDate using moment.js date formatting
+        const totalBatches = await manageBatchModel.countDocuments({
+            assginedSectorsId: sectorObjectId,
+            StartDate: {
+                $gte: fromDate.toISOString(),
+                $lte: toDate.toISOString()
+            }
+        });
+
+        const totalCandidates = await manageCandidateModel.countDocuments({
+            assginedSectorsId: sectorObjectId, // Use sectorObjectId consistently
+            createAt: { $gte: fromDate.toISOString(), $lte: toDate.toISOString() }
+        });
+
+        const totalStates = await manageBatchModel.find({ assginedSectorsId: sectorObjectId }, "state");
+        const totalDistricts = await manageBatchModel.find({ assginedSectorsId: sectorObjectId }, "district");
+
+        const statesCount = totalStates.length;
+
+        const districtCount = totalDistricts.length;
+        // Aggregation for batch status by state
+        const stateBatchStatus = await manageBatchModel.aggregate([
+            {
+                $match: {
+                    StartDate: {
+                        $gte: fromDate.toISOString(),
+                        $lte: toDate.toISOString()
+                    }
+                }
+            },
+            {
+                $group: {
+                    _id: "$state",
+                    stateCount: { $sum: 1 }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    state: "$_id",
+                    stateCount: 1
+                }
+            }
+        ]);
+
+        // Aggregation for job role status
+        const jobRoleStatus = await jobRoleModel.aggregate([
+            {
+                $match: {
+                    createAt: {
+                        $gte: fromDate.toISOString(),
+                        $lte: toDate.toISOString()
+                    }
+                }
+            },
+            {
+                $group: {
+                    _id: "$jobRoleName",
+                    jobRoleCount: { $sum: 1 }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    jobRole: "$_id",
+                    jobRoleCount: 1
+                }
+            }
+        ]);
+
+        // Final Response
+        res.status(200).json({
+            totalBatches,
+            totalCandidates,
+            totalStates:statesCount,
+            totalDistricts:districtCount,
+            stateBatchStatus,
+            jobRoleStatus,
+        });
+
+    } catch (error) {
+        console.error("Error in getAnalyticsBySector:", error); // Add logging for better error tracking
+        res.status(500).json({ message: 'Server Error', error });
+    }
+};
+
 module.exports = {
     getQuestionAnalyticsRecord,
     getAnalyticsBySector,
     getquesitonBankDropDown,
-    getAssessorsDropDown
+    getAssessorsDropDown,
+    getAnalyticsByAssessors
 }
 
 
